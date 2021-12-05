@@ -1,0 +1,2 @@
+# furry-couscous
+NixOs Configuration
