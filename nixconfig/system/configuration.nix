@@ -10,16 +10,12 @@
       ./hardware-configuration.nix
     ];
 
-  # Use the GRUB 2 boot loader.
-  boot.loader.grub.enable = true;
-  boot.loader.grub.version = 2;
-  # boot.loader.grub.efiSupport = true;
-  # boot.loader.grub.efiInstallAsRemovable = true;
-  # boot.loader.efi.efiSysMountPoint = "/boot/efi";
-  # Define on which hard drive you want to install Grub.
-  boot.loader.grub.device = "/dev/sda"; # or "nodev" for efi only
+  # Use the systemd-boot EFI boot loader.
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "nixos_testbox"; # Define your hostname.
+  networking.hostName = "anothertestingVM"; # Define your hostname.
+  networking.networkmanager.enable = true;
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Set your time zone.
@@ -29,7 +25,28 @@
   # Per-interface useDHCP will be mandatory in the future, so this generated config
   # replicates the default behaviour.
   networking.useDHCP = false;
-  networking.interfaces.enp0s3.useDHCP = true;
+  networking.interfaces.enp3s0.useDHCP = true;
+  #networking.interfaces.wlp4s0.useDHCP = true;
+  # networking.nameservers = [ "192.168.1.124" "2600:1702:c0:b050::449" ];
+
+
+
+networking = {
+    # Don't try to find our domain name or DNS servers because then
+    # resolvconf will insert them into /etc/resolv.conf
+    dhcpcd.extraConfig =
+      ''
+      nooption domain_name_servers, domain_name, domain_search, host_name
+      nooption ntp_servers
+      nooption 1pv4only
+      '';
+    nameservers = [
+      "192.168.1.124"
+      "2600:1702:c0:b050::449"
+    ];
+};
+
+
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -49,7 +66,11 @@
   # Enable the Plasma 5 Desktop Environment.
   services.xserver.displayManager.sddm.enable = true;
   services.xserver.desktopManager.plasma5.enable = true;
-  
+
+  # Enable xrdp
+  #services.xrdp.enable = true;
+  #services.xrdp.defaultWindowManager = "startplasma-x11";
+  #networking.firewall.allowedTCPPorts = [ 3389 ]; 
 
   # Configure keymap in X11
   # services.xserver.layout = "us";
@@ -66,21 +87,38 @@
   hardware.bluetooth.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
+  services.xserver.libinput.enable = true;
+
+  # Enable Virtualization
+  virtualisation.libvirtd.enable = true;
+  programs.dconf.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-   users.users.testuser = {
-     isNormalUser = true;
-     shell = pkgs.fish;
-     initialPassword = "no";
-     extraGroups = [ "wheel" "audio" "networkmanager" ]; # Enable ‘sudo’ for the user.
-   };
+  users.users.testuser123 = {
+    isNormalUser = true;
+    shell = pkgs.fish;
+    initialPassword = "no";
+    extraGroups = [ "wheel" "audio" "networkmanager" "libvirtd" ]; # Enable ‘sudo’ for the user.
+  };
+  
+  #users.users.forrdp = {
+    #isNormalUser = true;
+    #shell = pkgs.fish;
+    #initialPassword = "rdp";
+    #extraGroups = [ "audio" ]; # Enable ‘sudo’ for the user.
+  #};
+
+
+  # Get the latest Kernel
+  #boot.kernelPackages = pkgs.linuxPackages_latest;
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
 environment.systemPackages = with pkgs; [
   # browser
   firefox
+  icecat-bin
+  #tor-browser-bundle-bin # Not Working
 
   # word processing
   libreoffice-qt
@@ -93,9 +131,12 @@ environment.systemPackages = with pkgs; [
   starship
   fish
   neofetch
+  htop
+  zsh
 
   # games 
   steam
+  wine-staging
 
   # audio/videos/images
   strawberry
@@ -103,6 +144,7 @@ environment.systemPackages = with pkgs; [
   hydrus
   gimp
   lxqt.pavucontrol-qt
+  mpv
 
   # kde stuff
   krdc
@@ -110,6 +152,10 @@ environment.systemPackages = with pkgs; [
   ark
   plasma-browser-integration
   kdeconnect
+  krfb
+  kmail
+  plasma5Packages.kclock
+  akonadi
 
   # dev
   git
@@ -117,6 +163,9 @@ environment.systemPackages = with pkgs; [
   wget
   python
   python3
+
+  # virtualization
+  virt-manager
 
   # misc apps
   qbittorrent
@@ -126,23 +175,23 @@ environment.systemPackages = with pkgs; [
   tdesktop
 ];
 
-  # Enable fish and starship
+  # Enable fish and fish
   programs.fish.enable = true;
+  programs.zsh.enable = true;
   environment.interactiveShellInit = ''
    [ -x /bin/fish ] && SHELL=/bin/fish exec fish 
   '';
-
 
   # Allow unfree licenses
   nixpkgs.config.allowUnfree = true;
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+  programs.mtr.enable = true;
+  programs.gnupg.agent = {
+    enable = true;
+    enableSSHSupport = true;
+  };
 
   # List services that you want to enable:
 
@@ -164,4 +213,3 @@ environment.systemPackages = with pkgs; [
   system.stateVersion = "21.11"; # Did you read the comment?
 
 }
-
