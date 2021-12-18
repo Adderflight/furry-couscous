@@ -25,7 +25,7 @@
   # Per-interface useDHCP will be mandatory in the future, so this generated config
   # replicates the default behaviour.
   networking.useDHCP = false;
-  networking.interfaces.enp3s0.useDHCP = true;
+  networking.interfaces.enp0s3.useDHCP = true;
   #networking.interfaces.wlp4s0.useDHCP = true;
   # networking.nameservers = [ "192.168.1.124" "2600:1702:c0:b050::449" ];
 
@@ -96,7 +96,7 @@ networking = {
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.testuser123 = {
     isNormalUser = true;
-    shell = pkgs.fish;
+    shell = pkgs.zsh;
     initialPassword = "no";
     extraGroups = [ "wheel" "audio" "networkmanager" "libvirtd" ]; # Enable ‘sudo’ for the user.
   };
@@ -133,9 +133,13 @@ environment.systemPackages = with pkgs; [
   neofetch
   htop
   zsh
+  zsh-autocomplete
+  zsh-autosuggestions
+  zsh-autopair
+  any-nix-shell
 
   # games 
-  steam
+  #steam
   wine-staging
 
   # audio/videos/images
@@ -163,6 +167,14 @@ environment.systemPackages = with pkgs; [
   wget
   python
   python3
+  yarn
+  yarn2nix
+  patchelf
+  cmake
+  glibc
+  gcc-unwrapped
+  steam-run
+  nix-index
 
   # virtualization
   virt-manager
@@ -175,12 +187,15 @@ environment.systemPackages = with pkgs; [
   tdesktop
 ];
 
-  # Enable fish and fish
+  # Enable fish and zsh
   programs.fish.enable = true;
   programs.zsh.enable = true;
-  environment.interactiveShellInit = ''
-   [ -x /bin/fish ] && SHELL=/bin/fish exec fish 
-  '';
+  programs.zsh.autosuggestions.enable = true;
+  #programs.zsh.autocomplete.enable = true;
+  #programs.zsh.autopair.enable = true;
+  #environment.interactiveShellInit = ''
+   #[ -x /bin/fish ] && SHELL=/bin/fish exec fish 
+  #'';
 
   # Allow unfree licenses
   nixpkgs.config.allowUnfree = true;
